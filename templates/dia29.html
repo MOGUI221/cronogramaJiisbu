@@ -13,8 +13,8 @@
     {% if not actividad.es_especial %}
     <div class="registro">
         <span class="contador-participantes" id="contador-{{ loop.index }}">0</span> participantes<br>
-        <button class="registro-btn" onclick="registrarAsistencia({{ loop.index }})" data-id="{{ loop.index }}">
-            {% if actividad.id in localStorage and localStorage.getItem(actividad.id) === 'true' %}Cancelar Registro{% else %}Registrar asistencia{% endif %}
+        <button class="registro-btn" onclick="registrarAsistencia({{ loop.index }})" data-id="{{ loop.index }}" data-estado="false">
+            Registrar asistencia
         </button>
     </div>
     {% endif %}
@@ -23,40 +23,50 @@
 </div>
 
 <script>
+document.addEventListener("DOMContentLoaded", function() {
+    {% for actividad in cronograma %}
+        // Obtener el ID de la actividad y el estado almacenado en localStorage
+        const id = {{ loop.index }};
+        const estado = localStorage.getItem("registro-" + id);
+        const btn = document.querySelector("[data-id='" + id + "']");
+        const contador = document.querySelector("#contador-" + id);
+
+        // Comprobar si el estado es 'true' o 'false'
+        if (estado === "true") {
+            // Si ya está registrado, actualizar el botón y contador
+            btn.textContent = "Cancelar Registro";
+            contador.textContent = parseInt(contador.textContent) + 1;
+        } else {
+            // Si no está registrado, asegurarse de que el texto es "Registrar asistencia"
+            btn.textContent = "Registrar asistencia";
+        }
+    {% endfor %}
+});
+
 // Función para registrar o cancelar la asistencia
 function registrarAsistencia(id) {
-    // Obtener el estado actual del registro
+    const btn = document.querySelector("[data-id='" + id + "']");
+    const contador = document.querySelector("#contador-" + id);
+
+    // Obtener el estado actual del registro en localStorage
     const estado = localStorage.getItem("registro-" + id);
 
     // Comprobar si el usuario ya está registrado
     if (estado === "true") {
         // Si ya está registrado, cancelar el registro
         localStorage.setItem("registro-" + id, "false");
-        document.querySelector("#contador-" + id).textContent--;
-        document.querySelector("[data-id='" + id + "']").textContent = "Registrar asistencia";  // Cambiar el texto a "Registrar asistencia"
+        contador.textContent--; // Disminuir el contador de participantes
+        btn.textContent = "Registrar asistencia";  // Cambiar el texto a "Registrar asistencia"
     } else {
         // Si no está registrado, hacer el registro
         localStorage.setItem("registro-" + id, "true");
-        document.querySelector("#contador-" + id).textContent++;
-        document.querySelector("[data-id='" + id + "']").textContent = "Cancelar Registro";  // Cambiar el texto a "Cancelar Registro"
+        contador.textContent++; // Aumentar el contador de participantes
+        btn.textContent = "Cancelar Registro";  // Cambiar el texto a "Cancelar Registro"
     }
 }
-
-// Al cargar la página, comprobar el estado de cada actividad
-window.onload = function() {
-    {% for actividad in cronograma %}
-    const id = {{ loop.index }};
-    const estado = localStorage.getItem("registro-" + id);
-    
-    if (estado === "true") {
-        // Si el usuario ya está registrado, actualizar el botón y contador
-        document.querySelector("[data-id='" + id + "']").textContent = "Cancelar Registro";
-        document.querySelector("#contador-" + id).textContent = parseInt(document.querySelector("#contador-" + id).textContent) + 1;
-    } else {
-        // Si el usuario no está registrado, asegurarse de que el texto es "Registrar asistencia"
-        document.querySelector("[data-id='" + id + "']").textContent = "Registrar asistencia";
-    }
-    {% endfor %}
-};
 </script>
 {% endblock %}
+
+
+
+
