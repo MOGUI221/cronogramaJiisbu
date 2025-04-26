@@ -9,44 +9,54 @@
     <div class="actividad">{{ actividad.nombre }}</div>
     <div class="horario">🕒 {{ actividad.inicio }} - {{ actividad.fin }}</div>
     <div class="encargado">{{ actividad.encargado }}</div>
+    
     {% if not actividad.es_especial %}
     <div class="registro">
         <span class="contador-participantes" id="contador-{{ loop.index }}">0</span> participantes<br>
-        <button onclick="registrarAsistencia({{ loop.index }})"
-        data-id="{{ loop.index }}">
-        Registrar asistencia
+        <button class="registro-btn" onclick="registrarAsistencia({{ loop.index }})" data-id="{{ loop.index }}">
+            {% if actividad.id in localStorage and localStorage.getItem(actividad.id) === 'true' %}Cancelar Registro{% else %}Registrar asistencia{% endif %}
         </button>
     </div>
     {% endif %}
   </div>
   {% endfor %}
 </div>
-{% endblock %}
 
 <script>
-  function registrarAsistencia(id) {
-    const contadorId = "contador-" + id;
-    const key = "asistencia-" + id;
+// Función para registrar o cancelar la asistencia
+function registrarAsistencia(id) {
+    // Obtener el estado actual del registro
+    const estado = localStorage.getItem("registro-" + id);
 
-    // Incrementar en LocalStorage
-    let actual = localStorage.getItem(key);
-    actual = actual ? parseInt(actual) + 1 : 1;
-    localStorage.setItem(key, actual);
+    // Comprobar si el usuario ya está registrado
+    if (estado === "true") {
+        // Si ya está registrado, cancelar el registro
+        localStorage.setItem("registro-" + id, "false");
+        document.querySelector("#contador-" + id).textContent--;
+        document.querySelector("[data-id='" + id + "']").textContent = "Registrar asistencia";  // Cambiar el texto a "Registrar asistencia"
+    } else {
+        // Si no está registrado, hacer el registro
+        localStorage.setItem("registro-" + id, "true");
+        document.querySelector("#contador-" + id).textContent++;
+        document.querySelector("[data-id='" + id + "']").textContent = "Cancelar Registro";  // Cambiar el texto a "Cancelar Registro"
+    }
+}
 
-    // Actualizar el contador en pantalla
-    document.getElementById(contadorId).innerText = actual;
-  }
-
-  // Al cargar la página, recuperar datos del localStorage
-  window.onload = function () {
-    const contadores = document.querySelectorAll("[id^='contador-']");
-    contadores.forEach((elemento) => {
-      const id = elemento.id.split("-")[1];
-      const key = "asistencia-" + id;
-      const valor = localStorage.getItem(key);
-      if (valor) {
-        elemento.innerText = valor;
-      }
-    });
-  };
+// Al cargar la página, comprobar el estado de cada actividad
+window.onload = function() {
+    {% for actividad in cronograma %}
+    const id = {{ loop.index }};
+    const estado = localStorage.getItem("registro-" + id);
+    
+    if (estado === "true") {
+        // Si el usuario ya está registrado, actualizar el botón y contador
+        document.querySelector("[data-id='" + id + "']").textContent = "Cancelar Registro";
+        document.querySelector("#contador-" + id).textContent = parseInt(document.querySelector("#contador-" + id).textContent) + 1;
+    } else {
+        // Si el usuario no está registrado, asegurarse de que el texto es "Registrar asistencia"
+        document.querySelector("[data-id='" + id + "']").textContent = "Registrar asistencia";
+    }
+    {% endfor %}
+};
 </script>
+{% endblock %}
