@@ -1,8 +1,62 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request, jsonify, make_response
+from datetime import datetime, time
+import threading
+import hashlib
 
 app = Flask(__name__)
+app.secret_key = 'clave_secreta_jiisbu'  # Cambia esto por una clave única
 
+# Almacenamiento en memoria (optimizado para 400+ usuarios)
+asistencias_globales = {}
+lock = threading.Lock()
 
+def get_user_id():
+    """Genera un ID único basado en IP + User-Agent"""
+    ip = request.remote_addr or '127.0.0.1'
+    user_agent = request.headers.get('User-Agent', '')[:50]
+    return hashlib.md5(f"{ip}{user_agent}".encode()).hexdigest()
+
+def reset_diario():
+    """Reinicia los registros a medianoche"""
+    while True:
+        now = datetime.now()
+        if now.time() > time(23, 59):
+            with lock:
+                asistencias_globales.clear()
+        threading.Event().wait(3600)  # Verificar cada hora
+
+# Iniciar hilo para reset diario
+threading.Thread(target=reset_diario, daemon=True).start()
+
+@app.route('/registrar_asistencia', methods=['POST'])
+def registrar_asistencia():
+    salon_id = request.form.get('salon_id')
+    user_id = request.cookies.get('user_id') or get_user_id()
+    
+    with lock:
+        if salon_id not in asistencias_globales:
+            asistencias_globales[salon_id] = set()
+        
+        if user_id in asistencias_globales[salon_id]:
+            asistencias_globales[salon_id].remove(user_id)
+            accion = 'removido'
+        else:
+            asistencias_globales[salon_id].add(user_id)
+            accion = 'agregado'
+        
+        count = len(asistencias_globales[salon_id])
+    
+    response = make_response(jsonify({
+        'success': True,
+        'count': count,
+        'accion': accion
+    }))
+    response.set_cookie('user_id', user_id, max_age=86400)  # 24 horas
+    return response
+
+@app.route('/obtener_asistencias')
+def obtener_asistencias():
+    return jsonify({k: len(v) for k, v in asistencias_globales.items()})
 
 
         

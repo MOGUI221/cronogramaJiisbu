@@ -101,4 +101,57 @@
         });
     </script>
 </body>
+<script>
+    async function registrarAsistencia(salonId) {
+        const formData = new FormData();
+        formData.append('salon_id', salonId);
+
+        try {
+            const response = await fetch('/registrar_asistencia', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                const contador = document.getElementById(`contador-${salonId}`);
+                const boton = document.querySelector(`button[data-id="${salonId}"]`);
+
+                contador.innerText = data.count;
+
+                if (data.accion === 'agregado') {
+                    boton.textContent = 'Cancelar asistencia';
+                    boton.style.backgroundColor = '#ff0000';
+                    boton.classList.add('cancelar');
+                } else {
+                    boton.textContent = 'Registrar asistencia';
+                    boton.style.backgroundColor = '#ff4500';
+                    boton.classList.remove('cancelar');
+                }
+            }
+        } catch (error) {
+            console.error('Error al registrar asistencia:', error);
+        }
+    }
+
+    // Cargar conteo de asistencias al iniciar
+    fetch('/obtener_asistencias')
+        .then(res => res.json())
+        .then(data => {
+            for (const salonId in data) {
+                const contadorElem = document.getElementById(`contador-${salonId}`);
+                if (contadorElem) {
+                    contadorElem.innerText = data[salonId];
+                }
+            }
+        });
+
+    // ✅ Usamos tu variable `currentPath` ya existente
+    document.querySelectorAll('.tab').forEach(tab => {
+        if (tab.getAttribute('href') === currentPath) {
+            tab.classList.add('active');
+        }
+    });
+</script>
+
 </html>
