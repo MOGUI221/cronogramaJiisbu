@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JIISBU XVIII</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}">
+</head>
+<body>
+    <header>
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="logo">
+        <h1>Lúdicas</h1>
+    </header>
+    <h2>Cronograma</h2>
+    <div class="salones" id="lista-salones">
+        {% block body %}
+        {% endblock %}
+    </div>
+    <script>
+        let usuariosRegistrados = {};
+
+        function toggleRegistro(salonId) {
+            const contador = document.getElementById(`contador-${salonId}`);
+            const boton = document.querySelector(`button[data-id="${salonId}"]`);
+            
+            if (!usuariosRegistrados[salonId]) {
+                // Registrar
+                usuariosRegistrados[salonId] = true;
+                contador.innerText = parseInt(contador.innerText) + 1;
+                boton.textContent = "Cancelar asistencia";
+                boton.style.backgroundColor = "#ff0000"; // Rojo
+                boton.classList.add('cancelar');
+            } else {
+                // Cancelar
+                usuariosRegistrados[salonId] = false;
+                contador.innerText = parseInt(contador.innerText) - 1;
+                boton.textContent = "Registrar asistencia";
+                boton.style.backgroundColor = "#ff4500"; // Naranja original
+                boton.classList.remove('cancelar');
+            }
+        }
+
+        function validarRegistro(salon, inicio, fin, salonId) {
+            // Solo validar si es un nuevo registro (no al cancelar)
+            if (!usuariosRegistrados[salonId]) {
+                function horaAMinutos(hora) {
+                    const [h, m] = hora.split(':').map(Number);
+                    return h * 60 + m;
+                }
+
+                const nuevoInicio = horaAMinutos(inicio);
+                const nuevoFin = horaAMinutos(fin);
+                let conflicto = false;
+                let salonConflictivo = '';
+
+                // Verificar conflictos
+                for (const id in usuariosRegistrados) {
+                    if (usuariosRegistrados[id] && id != salonId) {
+                        const actividadElem = document.getElementById(`salon-${id}`);
+                        if (actividadElem) {
+                            const horario = actividadElem.querySelector('.horario').innerText;
+                            const salonActividad = actividadElem.querySelector('.titulo-salon').innerText;
+                            const [existenteInicio, existenteFin] = horario.replace('🕒 ', '').split(' - ');
+                            
+                            const existenteInicioMin = horaAMinutos(existenteInicio);
+                            const existenteFinMin = horaAMinutos(existenteFin);
+
+                            if (nuevoInicio < existenteFinMin && nuevoFin > existenteInicioMin) {
+                                conflicto = true;
+                                salonConflictivo = salonActividad;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (conflicto) {
+                    alert(`❌ No puedes registrarte en el salón ${salon} porque se cruza con el horario del salón ${salonConflictivo}`);
+                    document.getElementById(`salon-${salonId}`).classList.add('conflicto-horario');
+                    setTimeout(() => {
+                        document.getElementById(`salon-${salonId}`).classList.remove('conflicto-horario');
+                    }, 2000);
+                    return;
+                }
+            }
+            
+            // Si no hay conflicto o es una cancelación
+            toggleRegistro(salonId);
+        }
+
+        function registrarse(salonId) {
+            if (!usuariosRegistrados[salonId]) {
+                usuariosRegistrados[salonId] = true;
+                const contador = document.getElementById(`contador-${salonId}`);
+                contador.innerText = parseInt(contador.innerText) + 1;
+                alert("Registro exitoso en la lúdica.");
+            } else {
+                alert("Ya te has registrado en esta lúdica.");
+            }
+        }
+        
+    </script>
+</body>
+</html>

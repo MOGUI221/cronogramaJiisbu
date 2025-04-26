@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Cronograma 30 de Abril</h2>
+<div class="salones">
+  {% for actividad in cronograma %}
+  <div class="salon {% if actividad.es_especial %}evento-especial{% endif %}" id="salon-{{ loop.index }}">
+    <div class="titulo-salon">{{ actividad.salon }}</div>
+    <div class="actividad">{{ actividad.nombre }}</div>
+    <div class="horario">🕒 {{ actividad.inicio }} - {{ actividad.fin }}</div>
+    <div class="encargado">{{ actividad.encargado }}</div>
+    {% if not actividad.es_especial %}
+    <div class="registro">
+        <span class="contador-participantes" id="contador-{{ loop.index }}">0</span> participantes<br>
+        <button onclick="validarRegistro('{{ actividad.salon }}', '{{ actividad.inicio }}', '{{ actividad.fin }}', {{ loop.index }})"
+                data-id="{{ loop.index }}">
+            Registrar asistencia
+        </button>
+    </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
