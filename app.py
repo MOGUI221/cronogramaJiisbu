@@ -137,6 +137,18 @@ def dia29():
 def dia30():
     return render_template('dia30.html', cronograma=process_cronograma(cronograma_dia30))
 
+@app.route('/estado_usuario')
+def estado_usuario():
+    salon_id = request.args.get('salon_id')
+    user_id = request.cookies.get('user_id') or get_user_id()
+    
+    registrado = False
+    with lock:
+        if salon_id in asistencias_globales and user_id in asistencias_globales[salon_id]:
+            registrado = True
+    
+    return jsonify({'registrado': registrado})
+
 # 4. Bloque principal
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

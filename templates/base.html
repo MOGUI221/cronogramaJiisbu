@@ -153,5 +153,39 @@
         }
     });
 </script>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const botones = document.querySelectorAll(".registro-btn");
+  
+      botones.forEach(boton => {
+        const salonId = boton.dataset.salon;
+        const index = boton.dataset.index;
+        const contador = document.getElementById(`contador-${index}`);
+  
+        // Verificar estado al cargar
+        fetch(`/estado_usuario?salon_id=${salonId}`)
+          .then(res => res.json())
+          .then(data => {
+            boton.textContent = data.registrado ? "Cancelar registro" : "Registrar";
+          });
+  
+        // Manejar clic en botón
+        boton.addEventListener("click", () => {
+          const formData = new FormData();
+          formData.append("salon_id", salonId);
+  
+          fetch("/registrar_asistencia", {
+            method: "POST",
+            body: formData
+          })
+          .then(res => res.json())
+          .then(data => {
+            boton.textContent = data.accion === "agregado" ? "Cancelar registro" : "Registrar";
+            contador.textContent = data.count;
+          });
+        });
+      });
+    });
+  </script>
 
 </html>

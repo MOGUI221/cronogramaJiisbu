@@ -12,7 +12,6 @@
     {% if not actividad.es_especial %}
     <div class="registro">
         <span class="contador-participantes" id="contador-{{ loop.index }}">0</span> participantes<br>
-        <span class="contador-participantes" id="contador-{{ loop.index }}">0</span> participantes<br>
         <button onclick="registrarAsistencia({{ loop.index }})"
         data-id="{{ loop.index }}">
         Registrar asistencia
