@@ -22,3 +22,31 @@
   {% endfor %}
 </div>
 {% endblock %}
+
+<script>
+  function registrarAsistencia(id) {
+    const contadorId = "contador-" + id;
+    const key = "asistencia-" + id;
+
+    // Incrementar en LocalStorage
+    let actual = localStorage.getItem(key);
+    actual = actual ? parseInt(actual) + 1 : 1;
+    localStorage.setItem(key, actual);
+
+    // Actualizar el contador en pantalla
+    document.getElementById(contadorId).innerText = actual;
+  }
+
+  // Al cargar la página, recuperar datos del localStorage
+  window.onload = function () {
+    const contadores = document.querySelectorAll("[id^='contador-']");
+    contadores.forEach((elemento) => {
+      const id = elemento.id.split("-")[1];
+      const key = "asistencia-" + id;
+      const valor = localStorage.getItem(key);
+      if (valor) {
+        elemento.innerText = valor;
+      }
+    });
+  };
+</script>
